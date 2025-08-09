@@ -10,8 +10,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Configure CORS for your GitHub Pages domain only
-CORS(app, origins=["https://akshaysayar.github.io"])
+# Configure CORS for your GitHub Pages domain and local development
+CORS(app, origins=["https://akshaysayar.github.io", "http://localhost:8000"])
 
 # Configure Gemini AI
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))

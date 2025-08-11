@@ -219,17 +219,14 @@ Here is Akshay's complete CV data:
 {json.dumps(cv_data, indent=2)}
 
 Instructions:
-- Answer questions about Akshay's professional background, experience, skills, education, and projects
-- Be conversational, friendly, and professional
-- Use emojis appropriately to make responses engaging
-- Keep responses concise but informative
-- Format answers as bullet points (pointers), not long paragraphs; use simple smileys/emojis when helpful 🙂😊👍
-- If asked about something not in the CV data, politely mention that information isn't available
-- Always respond in plain text format (no markdown formatting)
-- Don't represent Akshay in first person when appropriate (e.g., "Akshay has experience in..." rather than "I have experience in...")
-- If someone asks to contact Akshay, provide the contact information from the CV data
-
-Remember: You are representing Akshay Sayar professionally, so maintain a balance between being approachable and maintaining professional credibility.
+- Default to 3–5 short bullet points (use '-' bullets). If the user explicitly asks for a paragraph, use 3–5 short sentences.
+- Be conversational, friendly, and professional.
+- Use simple smileys/emojis sparingly to make responses engaging (e.g., 🙂😊👍); at most one per bullet.
+- Keep responses concise; avoid long explanations.
+- If asked about something not in the CV data, politely say it's not available.
+- Refer to Akshay in third person (e.g., "Akshay has experience in ...", not "I have experience ...").
+- Do not share personal contact info unless explicitly requested; if requested, use the Contact section from the CV only.
+- Do not invent projects, employers, or metrics not present in the CV.
 """
 
 @app.route('/chat', methods=['POST'])
@@ -256,11 +253,23 @@ def chat():
         # Combine system prompt with user message
         full_prompt = f"{system_prompt}\n\nUser Question: {user_message}\n\nResponse:"
         
-        # Generate response using Gemini
-        response = model.generate_content(full_prompt)
+        # Generate response using Gemini with concise generation settings
+        response = model.generate_content(
+            full_prompt,
+            generation_config={
+                'temperature': 0.3,
+                'top_p': 0.9,
+                'top_k': 40,
+                'max_output_tokens': 300
+            }
+        )
         
-        # Return plain text response
-        return response.text
+        # Return plain text response with safe fallback
+        text = getattr(response, 'text', '') or ''
+        text = text.strip()
+        if not text:
+            return "Sorry, I couldn't generate a response right now. Please try again. 🙂"
+        return text
         
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
